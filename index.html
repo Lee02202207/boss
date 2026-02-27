@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보스 패턴 북마크</title>
+    <style>
+        body {
+            background: #0b0b0b;
+            color: #eee;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .bookmark-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .boss-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: 0.2s;
+            letter-spacing: 1px;
+        }
+        .boss-btn:hover {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+        #boss1 { background: #1e3a5f; color: #aad3ff; border: 2px solid #4f9eff; } /* 카윌 푸른 다크 */
+        #boss2 { background: #2d1b3a; color: #d9b3ff; border: 2px solid #b300b3; } /* 듄켈 보라빨강검정 */
+        #boss3 { background: #3d2a1a; color: #ffe08c; border: 2px solid #ffcc00; } /* 세렌 노랑 다크 */
+        #boss4 { background: #1a1a1a; color: #ff6666; border: 2px solid #ff0000; } /* 검마 빨강검정 */
+
+        .pattern-container {
+            background: #111111;
+            border-radius: 24px;
+            padding: 25px 15px;
+            max-width: 700px;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(255,255,255,0.05);
+        }
+        .boss-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            border-bottom: 3px solid;
+            display: inline-block;
+            padding-bottom: 8px;
+        }
+        .pattern-table {
+            font-size: 1.3rem;
+            line-height: 2;
+            word-break: keep-all;
+            white-space: nowrap;
+            overflow-x: auto;
+            padding: 15px 5px;
+            background: #1d1d1d;
+            border-radius: 20px;
+            border: 1px solid #333;
+        }
+        #patternDunkel {
+    max-width: 300px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+/* 카윌 패턴 넓이 반토막 */
+#patternTable {
+    max-width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 세렌 패턴 넓이 1/3 */
+#patternSeren {
+    max-width: 33.33%;
+    margin-left: auto;
+    margin-right: auto;
+}
+        /* 색상 디자인 */
+        .blue-text { color: #6ec8ff; }      /* 카윌 푸른 */
+        .red-text { color: #ff6b6b; }       /* 밀격 빨강 */
+        .purple-text { color: #c77dff; }     /* 거미 보라 */
+        .green-text { color: #6fda6f; }      /* 독 초록 */
+        .yellow-text { color: #ffe25e; }      /* 노랑 */
+        .white-text { color: #f0f0f0; }       /* 흰 */
+        .orange-text { color: #ffb347; }      /* 오렌지(검마) */
+        .권능 { color: #8b0000; font-weight: bold; }  /* 검마 권능 빨강 */
+        .땅개 { color: #6a0dad; font-weight: bold; }  /* 검마 땅개 보라 */
+        .pattern-item { margin: 6px 0; }
+
+        /* 타이머 영역 (검마) */
+        .timer-area {
+            margin-top: 30px;
+            padding: 15px;
+            background: #0a0a0a;
+            border-radius: 20px;
+            border: 1px solid #ff4444;
+        }
+        #timer { font-size: 2.5em; color: #ffaaaa; }
+        #message { font-size: 1.6em; height: 50px; }
+        #nextPattern { background: #220000; padding: 12px; border-radius: 16px; }
+        button {
+            background: #333;
+            color: white;
+            border: 1px solid red;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        input { padding: 8px; width: 100px; text-align: center; background: #222; color: white; border: 1px solid red; }
+        .pattern-info { text-align: left; background: #1f1f1f; padding: 15px; border-radius: 16px; }
+    </style>
+</head>
+<body>
+    <div class="bookmark-bar">
+        <button class="boss-btn" id="boss1" onclick="showPattern('카윌')">카윌</button>
+        <button class="boss-btn" id="boss2" onclick="showPattern('듄켈')">듄켈</button>
+        <button class="boss-btn" id="boss3" onclick="showPattern('세렌')">세렌</button>
+        <button class="boss-btn" id="boss4" onclick="showPattern('검마')">검마</button>
+    </div>
+
+    <div class="pattern-container" id="patternContainer">
+        <div class="boss-title" id="bossTitle" style="border-color:#4f9eff;">카윌</div>
+        <div class="pattern-table" id="patternTable">
+            <span class="blue-text">장벽</span> <span class="red-text">밀기</span> <span class="blue-text">평 평</span><br>
+            <span class="blue-text">장벽</span> <span class="purple-text">거미</span> <span class="red-text">밀격</span> <span class="blue-text">평</span><br>
+            <span class="blue-text">순 장벽 평</span> <span class="purple-text">거미</span><br>
+            <span class="red-text">밀격</span> <span class="blue-text">평</span><br>
+            <br>
+            <br>
+            <span class="green-text">독</span> <span class="yellow-text"></span> <span class="blue-text">평</span> <span class="yellow-text">노  </span>  
+            <span class="blue-text"> &emsp;평 <span class="red-text"> 밀 </span> 
+            <span class="white-text">흰</span> <span class="blue-text">평</span><br>
+            <span class="green-text">독</span> <span class="blue-text">평</span> <span class="yellow-text">노&emsp;</span> <span class="red-text">밀</span> <span class="white-text">흰</span> <span class="blue-text">평&emsp;</span> <span class="red-text">밀</span> <span class="white-text">흰</span> <span class="blue-text">평&emsp;</span> <span class="blue-text">평</span>  </div> 
+        
+
+        <!-- 듄켈, 세렌 패턴 (초기 숨김) -->
+        <div id="patternDunkel" style="display: none;" class="pattern-table">
+           <div class="pattern-table" style="text-align: left;">
+            <span class="yellow-text">밀</span> 돌 칼 <span class="red-text">찍</span> 운 <span class="yellow-text">밀</span> 칼 돌 <span class="red-text">찍</span><br>
+            운 칼 <span class="yellow-text">밀</span> <span class="red-text">찍</span> 돌 운<br>
+            <br>
+            <span class="red-text">찍</span> 칼 검기 <span class="yellow-text">밀</span> 돌 운 <span class="red-text">찍</span> 칼 돌<br>
+            <span class="yellow-text">밀</span> 검기 운<br> <br>
+            칼 <span class="red-text">찍</span> 운 <span class="yellow-text">밀</span> 돌 <span class="red-text">찍</span> 칼 검기 운<br>
+            <span class="yellow-text">밀</span> 돌<br><br>
+            칼 <span class="yellow-text">밀</span> 돌 검기 <span class="red-text">찍</span> 운 <span class="yellow-text">밀</span> 칼 검<br>
+            기 돌 <span class="red-text">찍</span> 운 </div> 
+        </div>
+        <div id="patternSeren" style="display: none;" class="pattern-table">
+            
+            <span class="yellow-text">검</span> <span class="orange-text">돌</span> 찌 팔<br>
+            찌 <span class="orange-text">돌</span> 팔 <span class="yellow-text">검</span> 찌<br> <br>
+           찌르기 <span class="orange-text">돌진</span> <span class="yellow-text">레이저</span> 팔각<br> <br>
+            찌 <span class="orange-text">돌</span> 찌 <span class="red-text">3타</span> 
+        </div>
+        <!-- 검마 패턴 + 타이머 통합 -->
+        <div id="patternGm" style="display: none;">
+            <div class="pattern-table">
+                왼왼<span class="red-text">오</span>왼</span><br>
+                왼</span> <span class="땅개">파멸의눈</span><br>
+                왼왼<span class="red-text">오</span>왼</span><br>
+                왼</span> <span class="땅개">파멸의눈</span><br>
+                <span class="red-text">오</span>왼</span> <span class="권능">권능</span>
+            </div>
+            <div class="timer-area">
+                <h2 style="color: #ff6666;">⚡ 검마 2페 타이머 ⚡</h2>
+                <div>
+                    <label for="startTime">시작 시간: </label>
+                    <input type="text" id="startTime" placeholder="2500" value="2500">
+                    <button id="startBtn">시작</button>
+                </div>
+                <div id="timer">25:00</div>
+                <div id="message"></div>
+                <div id="nextPattern">다음 패턴: -</div>
+                <div id="patternInfo" class="pattern-info"><h3>예정된 패턴 :</h3></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPattern(boss) {
+            const title = document.getElementById('bossTitle');
+            const tableMain = document.getElementById('patternTable');
+            const dunkel = document.getElementById('patternDunkel');
+            const seren = document.getElementById('patternSeren');
+            const gm = document.getElementById('patternGm');
+
+            // 모든 패턴 숨김
+            tableMain.style.display = 'none';
+            dunkel.style.display = 'none';
+            seren.style.display = 'none';
+            gm.style.display = 'none';
+
+            if (boss === '카윌') {
+                title.innerText = '카윌';
+                title.style.borderColor = '#4f9eff';
+                tableMain.style.display = 'block';
+            } else if (boss === '듄켈') {
+                title.innerText = '듄켈';
+                title.style.borderColor = '#b300b3';
+                dunkel.style.display = 'block';
+            } else if (boss === '세렌') {
+                title.innerText = '세렌';
+                title.style.borderColor = '#ffcc00';
+                seren.style.display = 'block';
+            } else if (boss === '검마') {
+                title.innerText = '검마';
+                title.style.borderColor = '#ff0000';
+                gm.style.display = 'block';
+            }
+        }
+
+        // 검마 타이머 코드 (그대로 삽입)
+        (function() {
+            const timerDisplay = document.getElementById('timer');
+            const messageDisplay = document.getElementById('message');
+            const startBtn = document.getElementById('startBtn');
+            const startTimeInput = document.getElementById('startTime');
+            const patternInfo = document.getElementById('patternInfo');
+            const nextPatternDisplay = document.getElementById('nextPattern');
+
+            let timer;
+            let totalSeconds = 0;
+            let elapsedSeconds = 0;
+            let patternIndex = 0;
+            let 땅개횟수 = 0;
+            let 권능횟수 = 0;
+
+            const patterns = [
+                [40, "땅개", "땅개"],
+                [80, "권능", "권능"],
+                [90, "땅개", "땅개"],
+                [140, "땅개", "땅개"],
+                [160, "권능", "권능"],
+                [190, "땅개", "땅개"],
+                [240, "땅개", "땅개"],
+                [240, "권능", "권능"],
+                [290, "땅개", "땅개"],
+                [320, "권능", "권능"]
+            ].sort((a, b) => a[0] - b[0]);
+
+            if (startBtn) {
+                startBtn.addEventListener('click', startTimer);
+            }
+
+            function parseTime(input) {
+                let timeStr = input.replace(/\D/g, '');
+                if (timeStr.length === 3) timeStr = '0' + timeStr;
+                if (timeStr.length === 4) {
+                    const mins = parseInt(timeStr.substring(0, 2));
+                    const secs = parseInt(timeStr.substring(2, 4));
+                    return mins * 60 + secs - 10;
+                }
+                return 1500 - 10;
+            }
+
+            function startTimer() {
+                const inputTime = startTimeInput.value;
+                totalSeconds = parseTime(inputTime);
+                elapsedSeconds = 0;
+                patternIndex = 0;
+                땅개횟수 = 0;
+                권능횟수 = 0;
+
+                clearInterval(timer);
+                messageDisplay.textContent = '';
+                messageDisplay.className = '';
+
+                updatePatternList(totalSeconds + 10);
+                updateNextPattern();
+
+                const initialMins = Math.floor((totalSeconds + 10) / 60);
+                const initialSecs = (totalSeconds + 10) % 60;
+                timerDisplay.textContent = `${initialMins}:${initialSecs < 10 ? '0' + initialSecs : initialSecs}`;
+
+                timer = setInterval(updateTimer, 1000);
+            }
+
+            function updateTimer() {
+                elapsedSeconds++;
+                const remainingSeconds = totalSeconds - elapsedSeconds;
+
+                if (remainingSeconds < 0) {
+                    clearInterval(timer);
+                    timerDisplay.textContent = "00:00";
+                    messageDisplay.textContent = "타이머 종료!";
+                    nextPatternDisplay.textContent = "다음 패턴: -";
+                    return;
+                }
+
+                const mins = Math.floor(remainingSeconds / 60);
+                const secs = remainingSeconds % 60;
+                timerDisplay.textContent = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+
+                while (patternIndex < patterns.length && (elapsedSeconds + 10) >= patterns[patternIndex][0]) {
+                    const [_, msg, cls] = patterns[patternIndex];
+                    messageDisplay.textContent = msg;
+                    messageDisplay.className = cls;
+
+                    if (msg === "땅개") 땅개횟수++;
+                    if (msg === "권능") 권능횟수++;
+
+                    setTimeout(() => {
+                        messageDisplay.textContent = '';
+                        messageDisplay.className = '';
+                    }, 2000);
+                    patternIndex++;
+                }
+
+                updateNextPattern();
+            }
+
+            function updateNextPattern() {
+                if (patternIndex < patterns.length) {
+                    const nextTime = patterns[patternIndex][0];
+                    const remainingTime = nextTime - (elapsedSeconds + 10);
+                    const nextMsg = patterns[patternIndex][1];
+
+                    let countText = '';
+                    if (nextMsg === "땅개") countText = `${땅개횟수 + 1}번째 `;
+                    if (nextMsg === "권능") countText = `${권능횟수 + 1}번째 `;
+
+                    nextPatternDisplay.textContent = `다음 패턴: ${countText}${nextMsg} (${remainingTime}초 후)`;
+                } else {
+                    nextPatternDisplay.textContent = "다음 패턴: -";
+                }
+            }
+
+            function updatePatternList(startSeconds) {
+                patternInfo.innerHTML = '<h3>예정된 패턴 (6분 내):</h3>';
+                let temp땅개 = 0;
+                let temp권능 = 0;
+
+                patterns.forEach(pattern => {
+                    const [time, msg, cls] = pattern;
+                    if (time <= 360) {
+                        const timeLeft = startSeconds - time;
+                        if (timeLeft >= 0) {
+                            const mins = Math.floor(timeLeft / 60);
+                            const secs = timeLeft % 60;
+                            const timeStr = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+
+                            let countText = '';
+                            if (msg === "땅개") countText = `${++temp땅개}번째 `;
+                            if (msg === "권능") countText = `${++temp권능}번째 `;
+
+                            const item = document.createElement('div');
+                            item.className = 'pattern-item';
+                            item.innerHTML = `
+                                <span class="${cls}">${countText}${msg}</span> - 
+                                <strong>${timeStr}</strong>
+                            `;
+                            patternInfo.appendChild(item);
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
