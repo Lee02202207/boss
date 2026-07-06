@@ -99,15 +99,24 @@
             </div>
         </div>
 
+        <!-- 칼로스 영역 (수정완료) -->
         <div id="patternKalos" style="display: none;">
             <div class="pattern-table">
                 <span class="orange-text">로봇(22.5초)</span> | <span class="red-text">섬멸(90초)</span>
             </div>
             <div class="timer-area" style="border-color: #ff9900;">
                 <h2 style="color: #ff9900;">🛡️ 칼로스 타이머 (20초 워프) 🛡️</h2>
-                <input type="text" id="kalosInput" class="input-style" style="border-color: #ff9900;" value="1100">
+                
+                <!-- 입력용 내부 기준시계 상태창 추가 -->
+                <div style="margin-bottom: 15px; background: #1a1100; padding: 8px 15px; border-radius: 12px; border: 1px dashed #ff9900; display: inline-block;">
+                    <span id="kalosBgDisplay" style="color: #ffb347; font-size: 1.05rem; font-weight: bold;">입력용 시계: 대기 중 (Space 누르면 15:00 시작)</span>
+                    <button onclick="resetKalosBg()" style="background: #333; color: #ff6666; border: 1px solid #ff6666; border-radius: 6px; margin-left: 10px; cursor: pointer; padding: 2px 8px; font-size: 0.85rem; font-weight: bold;">시계 리셋</button>
+                </div>
+                <br>
+
+                <input type="text" id="kalosInput" class="input-style" style="border-color: #ff9900;" value="1500">
                 <button onclick="runTimer('kalos')" class="start-style" style="border-color: #ff9900;">시작</button>
-                <div id="kalosTimer" class="timer-val" style="color: #ffb347;">11:00</div>
+                <div id="kalosTimer" class="timer-val" style="color: #ffb347;">15:00</div>
                 <div id="kalosMsg" class="msg-val"></div>
                 <div id="kalosNext" class="next-val" style="background: #221100;">다음 패턴: -</div>
                 <div id="kalosInfo" class="info-style"><h3>예정된 패턴 :</h3></div>
@@ -117,6 +126,21 @@
 
     <script>
         let intervals = {};
+
+        // 칼로스 입력용 내부 기준시계 변수들
+        let kalosBgInterval = null;
+        let kalosBgStartTimestamp = null;
+        const kalosBgMaxSec = 15 * 60; // 15분 (900초)
+
+        // 칼로스 기준시계 초기화 함수
+        function resetKalosBg() {
+            if (kalosBgInterval) {
+                clearInterval(kalosBgInterval);
+                kalosBgInterval = null;
+            }
+            kalosBgStartTimestamp = null;
+            document.getElementById('kalosBgDisplay').innerText = "입력용 시계: 대기 중 (Space 누르면 15:00 시작)";
+        }
 
         function showPattern(boss) {
             const title = document.getElementById('bossTitle');
@@ -146,7 +170,6 @@
                 const gmBase = [[40, "땅개", "땅개"], [80, "권능", "권능"], [90, "땅개", "땅개"], [140, "땅개", "땅개"], [160, "권능", "권능"], [190, "땅개", "땅개"], [240, "땅개", "땅개"], [240, "권능", "권능"], [290, "땅개", "땅개"], [320, "권능", "권능"]];
                 patterns = gmBase.map(p => ({ time: startSec + 10 - p[0], msg: p[1], cls: p[2] }));
             } else {
-                // 칼로스: 00:00까지 모든 패턴 생성
                 for(let i=1; startSec - (i*22.5) >= 0; i++) patterns.push({ time: startSec - (i*22.5), msg: "로봇", cls: "orange-text" });
                 for(let i=1; startSec - (i*90) >= 0; i++) patterns.push({ time: startSec - (i*90), msg: "섬멸", cls: "red-text" });
             }
@@ -187,6 +210,49 @@
                 info.innerHTML += `<div class="pattern-item"><span class="${p.cls}">${p.msg}</span> - <strong>${m}:${s}</strong></div>`;
             });
         }
+
+        // 스페이스바 단축키 이벤트 컨트롤러
+        window.addEventListener('keydown', function(e) {
+            if (e.code === 'Space') {
+                // 칼로스 화면이 열려있고, 어떤 input 입력창도 클릭하지 않았을 때만 작동
+                if (document.getElementById('patternKalos').style.display === 'block' && document.activeElement.tagName !== 'INPUT') {
+                    e.preventDefault(); // 브라우저 스크롤 내려감 방지
+                    
+                    if (!kalosBgInterval) {
+                        // [1번째 스페이스바]: 입력용 15분 기준시계 시작 (인게임 진입 시점과 동기화)
+                        kalosBgStartTimestamp = Date.now();
+                        kalosBgInterval = setInterval(() => {
+                            let elapsed = (Date.now() - kalosBgStartTimestamp) / 1000;
+                            let bgLive = kalosBgMaxSec - elapsed;
+                            
+                            if (bgLive <= 0) {
+                                resetKalosBg();
+                            } else {
+                                let m = Math.floor(bgLive / 60);
+                                let s = Math.floor(bgLive % 60);
+                                document.getElementById('kalosBgDisplay').innerText = `입력용 시계: ${m}:${s.toString().padStart(2,'0')}`;
+                            }
+                        }, 200);
+                    } else {
+                        // [2번째 이후 스페이스바]: 현재 흘러간 기준시계의 시간을 가져와서 실제 입력창에 꽂고 타이머 구동
+                        let elapsed = (Date.now() - kalosBgStartTimestamp) / 1000;
+                        let bgLive = kalosBgMaxSec - elapsed;
+                        
+                        if (bgLive > 0) {
+                            let mins = Math.floor(bgLive / 60);
+                            let secs = Math.floor(bgLive % 60);
+                            
+                            // 숫자로 변환 (예: 13분 50초 -> "1350")
+                            let timeStr = mins.toString().padStart(2, '0') + secs.toString().padStart(2, '0');
+                            
+                            // 실제 인풋창에 값 대입 후 패턴 타이머 가동
+                            document.getElementById('kalosInput').value = timeStr;
+                            runTimer('kalos');
+                        }
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>
